@@ -18,8 +18,9 @@ import java.util.UUID;
 public class Like {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(updatable = false, nullable = false)
-    private UUID likeId = UUID.randomUUID();
+    private UUID likeId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "post_id", nullable = false)
@@ -34,6 +35,9 @@ public class Like {
 
     @PrePersist
     protected void onCreate() {
+        if (likeId == null) {
+            likeId = UUID.randomUUID();
+        }
         createdAt = LocalDateTime.now();
     }
 }

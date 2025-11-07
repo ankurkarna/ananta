@@ -18,8 +18,9 @@ import java.util.UUID;
 public class Follow {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(updatable = false, nullable = false)
-    private UUID followId = UUID.randomUUID();
+    private UUID followId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "follower_id", nullable = false)
@@ -34,6 +35,9 @@ public class Follow {
 
     @PrePersist
     protected void onCreate() {
+        if (followId == null) {
+            followId = UUID.randomUUID();
+        }
         createdAt = LocalDateTime.now();
     }
 }

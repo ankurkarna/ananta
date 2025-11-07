@@ -15,8 +15,9 @@ import java.util.UUID;
 @Builder
 public class User {
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(updatable = false, nullable = false)
-    private UUID userID = UUID.randomUUID();
+    private UUID userID;
 
     @Column(unique = true, nullable = false)
     @NonNull
@@ -46,6 +47,9 @@ public class User {
 
     @PrePersist
     protected void onCreate() {
+        if (userID == null) {
+            userID = UUID.randomUUID();
+        }
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
     }

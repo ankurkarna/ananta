@@ -18,8 +18,9 @@ import java.util.UUID;
 public class Post {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(updatable = false, nullable = false)
-    private UUID postId = UUID.randomUUID();
+    private UUID postId;
 
     @Column(nullable = false)
     private String imageUrl;
@@ -42,6 +43,9 @@ public class Post {
 
     @PrePersist
     protected void onCreate() {
+        if (postId == null) {
+            postId = UUID.randomUUID();
+        }
         createdAt = LocalDateTime.now();
     }
 }

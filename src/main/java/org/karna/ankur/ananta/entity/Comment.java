@@ -16,8 +16,9 @@ import java.util.UUID;
 public class Comment {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(updatable = false, nullable = false)
-    private UUID commentId = UUID.randomUUID();
+    private UUID commentId;
 
     @Column(nullable = false, length = 1000)
     private String content;
@@ -35,6 +36,9 @@ public class Comment {
 
     @PrePersist
     protected void onCreate() {
+        if (commentId == null) {
+            commentId = UUID.randomUUID();
+        }
         createdAt = LocalDateTime.now();
     }
 }
