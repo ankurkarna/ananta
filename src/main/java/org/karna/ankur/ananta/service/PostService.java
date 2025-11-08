@@ -10,6 +10,7 @@ import org.karna.ankur.ananta.repository.CommentRepository;
 import org.karna.ankur.ananta.repository.LikeRepository;
 import org.karna.ankur.ananta.repository.PostRepository;
 import org.karna.ankur.ananta.repository.UserRepository;
+import org.karna.ankur.ananta.util.GoogleDriveUtil;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,14 +26,21 @@ public class PostService {
     private final UserRepository userRepository;
     private final LikeRepository likeRepository;
     private final CommentRepository commentRepository;
+    private final GoogleDriveUtil googleDriveUtil;
 
     @Transactional
     public PostResponse createPost(CreatePostRequest request, String username) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
+        // Auto-convert Google Drive sharing links to direct links
+        String imageUrl = request.getImageUrl();
+        if (googleDriveUtil.isGoogleDriveLink(imageUrl)) {
+            imageUrl = googleDriveUtil.convertToDirectLink(imageUrl);
+        }
+
         Post post = Post.builder()
-                .imageUrl(request.getImageUrl())
+                .imageUrl(imageUrl)
                 .caption(request.getCaption())
                 .user(user)
                 .build();
