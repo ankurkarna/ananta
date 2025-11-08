@@ -46,3 +46,7 @@ target/
 application.properties
 .env
 
+### Google Drive ###
+credentials.json
+tokens/
+

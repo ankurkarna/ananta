@@ -1,26 +1,35 @@
 package org.karna.ankur.ananta.service;
 
+import com.google.api.client.auth.oauth2.Credential;
+import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInstalledApp;
+import com.google.api.client.extensions.jetty.auth.oauth2.LocalServerReceiver;
+import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
+import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.FileContent;
+import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.gson.GsonFactory;
+import com.google.api.client.util.store.FileDataStoreFactory;
 import com.google.api.services.drive.Drive;
+import com.google.api.services.drive.DriveScopes;
 import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.Permission;
-import com.google.auth.http.HttpCredentialsAdapter;
-import com.google.auth.oauth2.GoogleCredentials;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.security.GeneralSecurityException;
 import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -29,6 +38,8 @@ public class GoogleDriveService {
 
     private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
     private static final String APPLICATION_NAME = "Ananta Social Media";
+    private static final List<String> SCOPES = Collections.singletonList(DriveScopes.DRIVE_FILE);
+    private static final String TOKENS_DIRECTORY_PATH = "tokens";
 
     @Value("${google.drive.credentials.path:credentials.json}")
     private String credentialsPath;
@@ -91,27 +102,58 @@ public class GoogleDriveService {
     }
 
     /**
-     * Creates Drive service with credentials
+     * Creates Drive service with OAuth 2.0 credentials
      */
     private Drive getDriveService() throws IOException, GeneralSecurityException {
-        GoogleCredentials credentials = GoogleCredentials.fromStream(new FileInputStream(credentialsPath))
-                .createScoped(Collections.singletonList("https://www.googleapis.com/auth/drive.file"));
+        final NetHttpTransport httpTransport = GoogleNetHttpTransport.newTrustedTransport();
 
-        return new Drive.Builder(
-                GoogleNetHttpTransport.newTrustedTransport(),
-                JSON_FACTORY,
-                new HttpCredentialsAdapter(credentials))
+        // Load client secrets from credentials.json
+        GoogleClientSecrets clientSecrets;
+        try (InputStreamReader reader = new InputStreamReader(new FileInputStream(credentialsPath))) {
+            clientSecrets = GoogleClientSecrets.load(JSON_FACTORY, reader);
+        }
+
+        // Build flow and trigger user authorization request
+        GoogleAuthorizationCodeFlow flow = new GoogleAuthorizationCodeFlow.Builder(
+                httpTransport, JSON_FACTORY, clientSecrets, SCOPES)
+                .setDataStoreFactory(new FileDataStoreFactory(new java.io.File(TOKENS_DIRECTORY_PATH)))
+                .setAccessType("offline")
+                .build();
+
+        // Create receiver for authorization code
+        LocalServerReceiver receiver = new LocalServerReceiver.Builder().setPort(8888).build();
+
+        // Authorize and get credential
+        Credential credential = new AuthorizationCodeInstalledApp(flow, receiver).authorize("user");
+
+        return new Drive.Builder(httpTransport, JSON_FACTORY, credential)
                 .setApplicationName(APPLICATION_NAME)
                 .build();
     }
 
     /**
-     * Check if Google Drive is configured
+     * Check if Google Drive is configured (credentials exist)
      */
     public boolean isConfigured() {
         try {
             java.io.File credFile = new java.io.File(credentialsPath);
             return credFile.exists();
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    /**
+     * Check if user has authorized the application (tokens exist)
+     */
+    public boolean isAuthorized() {
+        try {
+            java.io.File tokensDir = new java.io.File(TOKENS_DIRECTORY_PATH);
+            if (!tokensDir.exists()) {
+                return false;
+            }
+            java.io.File[] tokenFiles = tokensDir.listFiles();
+            return tokenFiles != null && tokenFiles.length > 0;
         } catch (Exception e) {
             return false;
         }
