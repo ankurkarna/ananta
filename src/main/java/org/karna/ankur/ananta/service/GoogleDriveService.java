@@ -83,8 +83,9 @@ public class GoogleDriveService {
 
             log.info("File uploaded to Google Drive: {} (ID: {})", fileName, uploadedFile.getId());
 
-            // Return direct view URL
-            return "https://drive.google.com/uc?export=view&id=" + uploadedFile.getId();
+            // Return direct image URL using Google's CDN (better for embedding in web apps)
+            // This format works better for CORS and direct image display
+            return "https://lh3.googleusercontent.com/d/" + uploadedFile.getId();
 
         } finally {
             // Clean up temp file

@@ -1,0 +1,52 @@
+# Ananta Social Media Application Configuration Example
+# Copy this file and rename to application.yml or application-local.yml
+# Update values according to your environment
+
+server:
+  port: 8081
+  servlet:
+    context-path: /ananta/dev
+
+spring:
+  application:
+    name: ananta
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/ananta_db?useSSL=false&serverTimezone=UTC
+    username: your_db_username
+    password: your_db_password
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        format_sql: true
+
+  # File Upload Configuration - IMPORTANT for large files
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 100MB      # Maximum file size (images/videos)
+      max-request-size: 105MB   # Maximum request size (file + metadata)
+      file-size-threshold: 2MB  # Files larger than this are written to disk
+
+# JWT Configuration
+jwt:
+  secret: your-secret-key-min-256-bits-long-change-this-in-production
+  expiration: 86400000  # 24 hours in milliseconds
+
+# Google Drive Configuration (Optional)
+google:
+  drive:
+    credentials:
+      path: credentials.json  # Path to OAuth 2.0 credentials JSON
+    folder:
+      id: ""  # Optional: Google Drive folder ID for organizing uploads
+
+# File Storage Configuration
+file:
+  upload-dir: uploads  # Local storage directory (fallback)
