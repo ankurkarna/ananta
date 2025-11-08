@@ -36,6 +36,13 @@ public class PostController {
         return ResponseEntity.ok(posts);
     }
 
+    @GetMapping("/following")
+    public ResponseEntity<List<PostResponse>> getFollowingFeed(Authentication authentication) {
+        String username = authentication.getName();
+        List<PostResponse> posts = postService.getFollowingFeed(username);
+        return ResponseEntity.ok(posts);
+    }
+
     @GetMapping("/{postId}")
     public ResponseEntity<PostResponse> getPostById(
             @PathVariable UUID postId,

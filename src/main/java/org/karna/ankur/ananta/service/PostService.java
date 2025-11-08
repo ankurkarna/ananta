@@ -74,6 +74,17 @@ public class PostService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
+    public List<PostResponse> getFollowingFeed(String username) {
+        User currentUser = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        List<Post> posts = postRepository.findPostsFromFollowedUsers(currentUser.getUserID());
+        return posts.stream()
+                .map(post -> mapToPostResponse(post, currentUser))
+                .collect(Collectors.toList());
+    }
+
     @Transactional
     public void deletePost(UUID postId, String username) {
         User user = userRepository.findByUsername(username)
