@@ -69,4 +69,14 @@ public class PostController {
         postService.deletePost(postId, username);
         return ResponseEntity.noContent().build();
     }
+
+    @PutMapping("/{postId}")
+    public ResponseEntity<PostResponse> updatePost(
+            @PathVariable UUID postId,
+            @Valid @RequestBody CreatePostRequest request,
+            Authentication authentication) {
+        String username = authentication.getName();
+        PostResponse response = postService.updatePost(postId, request, username);
+        return ResponseEntity.ok(response);
+    }
 }

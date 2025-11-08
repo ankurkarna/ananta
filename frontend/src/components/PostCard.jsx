@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Card,
   CardHeader,
@@ -16,22 +17,35 @@ import {
   ListItem,
   ListItemAvatar,
   ListItemText,
+  Menu,
+  MenuItem,
 } from '@mui/material';
 import {
   Favorite,
   FavoriteBorder,
   ChatBubbleOutline,
   Send,
+  MoreVert,
+  Edit,
+  Delete,
 } from '@mui/icons-material';
-import { likeAPI, commentAPI } from '../services/api';
+import { likeAPI, commentAPI, postAPI } from '../services/api';
+import { useAuth } from '../context/AuthContext';
+import EditPostDialog from './EditPostDialog';
 
 export default function PostCard({ post, onUpdate }) {
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [liked, setLiked] = useState(post.likedByCurrentUser);
   const [likeCount, setLikeCount] = useState(post.likeCount);
   const [showComments, setShowComments] = useState(false);
   const [comments, setComments] = useState([]);
   const [commentText, setCommentText] = useState('');
   const [loadingComments, setLoadingComments] = useState(false);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+
+  const isOwnPost = user && post.user && user.username === post.user.username;
 
   const handleLike = async () => {
     try {
@@ -76,13 +90,65 @@ export default function PostCard({ post, onUpdate }) {
     }
   };
 
+  const handleMenuOpen = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleEdit = () => {
+    setEditDialogOpen(true);
+    handleMenuClose();
+  };
+
+  const handleDelete = async () => {
+    if (!window.confirm('Are you sure you want to delete this post?')) return;
+    try {
+      await postAPI.deletePost(post.postId);
+      if (onUpdate) onUpdate();
+      handleMenuClose();
+    } catch (error) {
+      console.error('Error deleting post:', error);
+      alert('Failed to delete post');
+    }
+  };
+
+  const handleUsernameClick = () => {
+    navigate(`/profile/${post.user.username}`);
+  };
+
   return (
-    <Card sx={{ mb: 3 }}>
-      <CardHeader
-        avatar={<Avatar sx={{ bgcolor: 'secondary.main' }}>{post.user.username[0].toUpperCase()}</Avatar>}
-        title={post.user.username}
-        subheader={new Date(post.createdAt).toLocaleDateString()}
-      />
+    <>
+      <Card sx={{ mb: 3 }}>
+        <CardHeader
+          avatar={
+            <Avatar
+              sx={{ bgcolor: 'secondary.main', cursor: 'pointer' }}
+              onClick={handleUsernameClick}
+            >
+              {post.user.username[0].toUpperCase()}
+            </Avatar>
+          }
+          title={
+            <Typography
+              variant="subtitle1"
+              sx={{ cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}
+              onClick={handleUsernameClick}
+            >
+              {post.user.username}
+            </Typography>
+          }
+          subheader={new Date(post.createdAt).toLocaleDateString()}
+          action={
+            isOwnPost && (
+              <IconButton onClick={handleMenuOpen}>
+                <MoreVert />
+              </IconButton>
+            )
+          }
+        />
       <CardMedia
         component="img"
         image={post.imageUrl}
@@ -147,5 +213,28 @@ export default function PostCard({ post, onUpdate }) {
         </CardContent>
       </Collapse>
     </Card>
+
+    <Menu
+      anchorEl={anchorEl}
+      open={Boolean(anchorEl)}
+      onClose={handleMenuClose}
+    >
+      <MenuItem onClick={handleEdit}>
+        <Edit sx={{ mr: 1 }} fontSize="small" />
+        Edit
+      </MenuItem>
+      <MenuItem onClick={handleDelete} sx={{ color: 'error.main' }}>
+        <Delete sx={{ mr: 1 }} fontSize="small" />
+        Delete
+      </MenuItem>
+    </Menu>
+
+    <EditPostDialog
+      open={editDialogOpen}
+      onClose={() => setEditDialogOpen(false)}
+      post={post}
+      onPostUpdated={onUpdate}
+    />
+  </>
   );
 }

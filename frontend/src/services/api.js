@@ -27,6 +27,14 @@ export const authAPI = {
   login: (data) => api.post('/auth/login', data),
 };
 
+// User APIs
+export const userAPI = {
+  getCurrentUser: () => api.get('/users/me'),
+  getUserById: (userId) => api.get(`/users/${userId}`),
+  getUserByUsername: (username) => api.get(`/users/username/${username}`),
+  searchUsers: (query) => api.get(`/users/search?query=${query}`),
+};
+
 // Post APIs
 export const postAPI = {
   createPost: (data) => api.post('/posts', data),
@@ -34,6 +42,7 @@ export const postAPI = {
   getFollowingFeed: () => api.get('/posts/following'),
   getPostById: (postId) => api.get(`/posts/${postId}`),
   getPostsByUser: (userId) => api.get(`/posts/user/${userId}`),
+  updatePost: (postId, data) => api.put(`/posts/${postId}`, data),
   deletePost: (postId) => api.delete(`/posts/${postId}`),
 };
 

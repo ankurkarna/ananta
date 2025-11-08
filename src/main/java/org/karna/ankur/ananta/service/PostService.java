@@ -94,6 +94,34 @@ public class PostService {
     }
 
     @Transactional
+    public PostResponse updatePost(UUID postId, CreatePostRequest request, String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new ResourceNotFoundException("Post not found"));
+
+        if (!post.getUser().getUserID().equals(user.getUserID())) {
+            throw new UnauthorizedException("You are not authorized to update this post");
+        }
+
+        // Update caption and image URL if provided
+        if (request.getCaption() != null) {
+            post.setCaption(request.getCaption());
+        }
+        if (request.getImageUrl() != null && !request.getImageUrl().isEmpty()) {
+            String imageUrl = request.getImageUrl();
+            if (googleDriveUtil.isGoogleDriveLink(imageUrl)) {
+                imageUrl = googleDriveUtil.convertToDirectLink(imageUrl);
+            }
+            post.setImageUrl(imageUrl);
+        }
+
+        Post updatedPost = postRepository.save(post);
+        return mapToPostResponse(updatedPost, user);
+    }
+
+    @Transactional
     public void deletePost(UUID postId, String username) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));

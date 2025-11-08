@@ -1,9 +1,10 @@
-import { AppBar, Toolbar, Typography, Button, Box } from '@mui/material';
+import { AppBar, Toolbar, Typography, Button, Box, IconButton } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Home, ExitToApp } from '@mui/icons-material';
+import { Home, ExitToApp, Brightness4, Brightness7 } from '@mui/icons-material';
+import SearchBar from './SearchBar';
 
-export default function Navbar() {
+export default function Navbar({ darkMode, toggleDarkMode }) {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
 
@@ -17,10 +18,16 @@ export default function Navbar() {
   return (
     <AppBar position="sticky">
       <Toolbar>
-        <Typography variant="h6" component="div" sx={{ flexGrow: 1, cursor: 'pointer' }} onClick={() => navigate('/')}>
+        <Typography variant="h6" component="div" sx={{ cursor: 'pointer', mr: 3 }} onClick={() => navigate('/')}>
           Ananta
         </Typography>
-        <Box>
+        <Box sx={{ flexGrow: 1 }}>
+          <SearchBar />
+        </Box>
+        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+          <IconButton color="inherit" onClick={toggleDarkMode} title={darkMode ? 'Light Mode' : 'Dark Mode'}>
+            {darkMode ? <Brightness7 /> : <Brightness4 />}
+          </IconButton>
           <Button color="inherit" startIcon={<Home />} onClick={() => navigate('/')}>
             Home
           </Button>

@@ -1,7 +1,8 @@
 import { createTheme } from '@mui/material/styles';
 
-const theme = createTheme({
+export const getTheme = (mode) => createTheme({
   palette: {
+    mode,
     primary: {
       main: '#1976d2', // Material Blue
       light: '#42a5f5',
@@ -15,9 +16,12 @@ const theme = createTheme({
     error: {
       main: '#d32f2f',
     },
-    background: {
+    background: mode === 'light' ? {
       default: '#fafafa',
       paper: '#ffffff',
+    } : {
+      default: '#121212',
+      paper: '#1e1e1e',
     },
   },
   typography: {
@@ -45,11 +49,13 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           borderRadius: 12,
-          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+          boxShadow: mode === 'light'
+            ? '0 2px 8px rgba(0,0,0,0.1)'
+            : '0 2px 8px rgba(0,0,0,0.5)',
         },
       },
     },
   },
 });
 
-export default theme;
+export default getTheme('light');
