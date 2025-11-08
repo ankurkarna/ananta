@@ -53,12 +53,11 @@ public class UserController {
 
     private UserResponse mapToUserResponse(User user) {
         return UserResponse.builder()
-                .userID(user.getUserID())
+                .userId(user.getUserID())
                 .username(user.getUsername())
                 .email(user.getEmail())
                 .bio(user.getBio())
                 .profileImageUrl(user.getProfileImageUrl())
-                .createdAt(user.getCreatedAt())
                 .build();
     }
 }
